@@ -10,19 +10,21 @@ BarWidget {
   moduleName: "net.2plastic.moodist"
 
   property var service: null
-  readonly property string instanceUrl: setting("instanceUrl", "https://moodist.mvze.net")
+  readonly property string instanceUrl: String(setting("instanceUrl", ""))
   readonly property bool playing: service ? service.playing : false
   readonly property bool opened: panelLoader.item ? panelLoader.item.opened === true : false
   readonly property bool popoutSwitchClosing: panelLoader.item
     ? panelLoader.item.popoutSwitchClosing === true
     : false
 
-  // The service is created by the shell, asynchronously and possibly after
-  // this widget, so look it up until it shows up.
+  // The shell creates the service asynchronously, possibly after this widget,
+  // and may replace it when the plugin reloads (e.g. `omarchy plugin update`).
+  // So keep asking for the current instance instead of holding on to the first.
   function resolveService() {
-    if (!service && bar && bar.shell && typeof bar.shell.serviceFor === "function")
-      service = bar.shell.serviceFor(moduleName)
-    if (service) service.baseUrl = service.normalizedBase(instanceUrl)
+    var current = bar && bar.shell && typeof bar.shell.serviceFor === "function"
+      ? bar.shell.serviceFor(moduleName) : null
+    if (current !== service) service = current
+    if (service && service.widgetInstance !== instanceUrl) service.widgetInstance = instanceUrl
     injectPanel()
   }
 
@@ -48,9 +50,9 @@ BarWidget {
   onInstanceUrlChanged: resolveService()
 
   Timer {
-    interval: 250
+    interval: root.service ? 1000 : 250
     repeat: true
-    running: root.service === null
+    running: true
     onTriggered: root.resolveService()
   }
 

@@ -20,6 +20,52 @@ Panel {
   readonly property var activeIds: service ? service.activeIds : []
   readonly property string instanceHost: service ? service.baseUrl.replace(/^https?:\/\//, "") : ""
 
+  // Server settings. testState: "idle" | "testing" | "ok" | "failed", always
+  // about the URL currently in the field; editing it resets to "idle".
+  property bool serverOpen: false
+  property string testState: "idle"
+  property string testMessage: ""
+  property string testedUrl: ""
+  property int testSerial: 0
+
+  function openServer() {
+    urlField.text = service ? service.baseUrl : ""
+    testState = "idle"
+    testMessage = ""
+    serverOpen = true
+  }
+
+  function runTest() {
+    if (!service) return
+    var url = urlField.text
+    var serial = ++testSerial
+    testState = "testing"
+    testMessage = "Testing..."
+    service.testInstance(url, function(ok, message) {
+      // A result for a URL that has since been edited is stale.
+      if (serial !== root.testSerial) return
+      root.testState = ok ? "ok" : "failed"
+      root.testMessage = message
+      root.testedUrl = url
+    })
+  }
+
+  // Writes instanceUrl to this widget's shell.json entry; the widget picks the
+  // change up through its settings and hands it to the service.
+  function saveServer() {
+    if (testState !== "ok" || !service) return
+    var next = ({})
+    for (var k in settings) next[k] = settings[k]
+    next.instanceUrl = service.normalizedBase(testedUrl)
+    if (bar && bar.shell && typeof bar.shell.updateEntryInline === "function"
+        && bar.shell.updateEntryInline(moduleName, next)) {
+      serverOpen = false
+    } else {
+      testState = "failed"
+      testMessage = "Could not save the setting"
+    }
+  }
+
   onOpenedChanged: if (opened) Qt.callLater(function() { keyCatcher.forceActiveFocus() })
 
   function labelFor(id) {
@@ -102,12 +148,121 @@ Panel {
               }
 
               Button {
+                iconText: String.fromCodePoint(0xF0493)
+                tooltipText: "Server"
+                selected: root.serverOpen
+                foreground: root.fg
+                bordered: true
+                onClicked: root.serverOpen ? root.serverOpen = false : root.openServer()
+              }
+
+              Button {
                 text: "Clear"
                 enabled: root.service ? root.service.hasMix : false
                 opacity: enabled ? 1 : 0.45
                 foreground: root.fg
                 bordered: true
                 onClicked: root.service.clearMix()
+              }
+            }
+          }
+
+          Column {
+            visible: root.serverOpen
+            width: parent.width
+            spacing: Style.spacing.sm
+
+            PanelSectionHeader {
+              text: "Moodist server"
+              foreground: root.fg
+            }
+
+            TextField {
+              id: urlField
+              width: parent.width
+              placeholderText: "https://moodist.mvze.net"
+              foreground: root.fg
+              onTextEdited: {
+                root.testSerial++
+                root.testState = "idle"
+                root.testMessage = ""
+              }
+              onAccepted: root.runTest()
+            }
+
+            Item {
+              width: parent.width
+              height: Math.max(testRow.implicitHeight, serverButtons.implicitHeight)
+
+              Row {
+                id: testRow
+                anchors.left: parent.left
+                anchors.right: serverButtons.left
+                anchors.rightMargin: Style.spacing.sm
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: Style.spacing.sm
+
+                // nf-md-check_circle / nf-md-close_circle / nf-md-help_circle / nf-md-timer_sand
+                Text {
+                  id: testIcon
+                  anchors.verticalCenter: parent.verticalCenter
+                  text: root.testState === "ok" ? String.fromCodePoint(0xF05E0)
+                    : root.testState === "failed" ? String.fromCodePoint(0xF0159)
+                    : root.testState === "testing" ? String.fromCodePoint(0xF051F)
+                    : String.fromCodePoint(0xF02D7)
+                  color: root.testState === "failed" ? Color.urgent
+                    : root.testState === "ok" ? Color.accent
+                    : root.muted
+                  font.family: Style.font.family
+                  font.pixelSize: Style.font.subtitle
+                }
+
+                Text {
+                  anchors.verticalCenter: parent.verticalCenter
+                  width: parent.width - testIcon.width - parent.spacing
+                  wrapMode: Text.Wrap
+                  text: root.testMessage || "Not tested yet"
+                  color: root.testState === "failed" ? Color.urgent : root.muted
+                  font.family: Style.font.family
+                  font.pixelSize: Style.font.caption
+                }
+              }
+
+              Row {
+                id: serverButtons
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: Style.spacing.sm
+
+                Button {
+                  text: "Default"
+                  tooltipText: "Fill in the official instance"
+                  foreground: root.fg
+                  bordered: true
+                  onClicked: {
+                    urlField.text = root.service ? root.service.defaultInstance : ""
+                    root.runTest()
+                  }
+                }
+
+                Button {
+                  text: "Test"
+                  enabled: root.testState !== "testing"
+                  opacity: enabled ? 1 : 0.45
+                  foreground: root.fg
+                  bordered: true
+                  onClicked: root.runTest()
+                }
+
+                Button {
+                  text: "Save"
+                  tooltipText: root.testState === "ok" ? "Use this server" : "Test the server first"
+                  enabled: root.testState === "ok"
+                  opacity: enabled ? 1 : 0.45
+                  foreground: root.fg
+                  bordered: true
+                  onClicked: root.saveServer()
+                }
               }
             }
           }

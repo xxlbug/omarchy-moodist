@@ -28,12 +28,24 @@ restored after a restart. Playback does not resume on its own.
 
 ## Use your own Moodist instance
 
+In the mixer, click the gear button, enter your instance's URL and press
+**Test**. A check mark means the instance serves Moodist's sounds; **Save**
+is enabled only then. **Default** goes back to the official instance.
+
+Or from a terminal:
+
 ```bash
 omarchy bar set net.2plastic.moodist instanceUrl https://moodist.example.com
 ```
 
 The instance must serve Moodist's sound files at their usual paths
 (`/sounds/<category>/<name>.mp3`), which any stock Moodist deployment does.
+
+## Updating
+
+`omarchy plugin update net.2plastic.moodist` reloads the widget right away,
+but the shell keeps the running audio service, so changes to it take effect
+after `omarchy restart shell` (or the next login).
 
 ## Keybindings and scripts
 

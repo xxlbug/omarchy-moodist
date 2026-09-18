@@ -12,8 +12,27 @@ Item {
 
   property var shell: null
 
+  readonly property string pluginId: "net.2plastic.moodist"
   readonly property string defaultInstance: "https://moodist.mvze.net"
-  property string baseUrl: defaultInstance
+  // instanceUrl as the widget sees it. Widgets get their settings the moment
+  // shell.json changes, so this wins when set.
+  property string widgetInstance: ""
+  // instanceUrl from this plugin's own bar entry, for when no widget has
+  // reported yet (startup). shell.barConfig is refreshed one change late
+  // (Omarchy snapshots it before the new config lands), so it only serves as
+  // the fallback.
+  readonly property string configuredInstance: {
+    var layout = shell && shell.barConfig ? shell.barConfig.layout : null
+    if (!layout) return ""
+    var sections = ["left", "center", "right"]
+    for (var i = 0; i < sections.length; i++) {
+      var entries = layout[sections[i]] || []
+      for (var j = 0; j < entries.length; j++)
+        if (entries[j] && entries[j].id === pluginId) return String(entries[j].instanceUrl || "")
+    }
+    return ""
+  }
+  readonly property string baseUrl: normalizedBase(widgetInstance || configuredInstance)
 
   // Catalogue from sounds.json: [{ id, title, sounds: [{ id, label, src }] }]
   property var categories: []
@@ -39,6 +58,41 @@ Item {
     var s = String(url || "").trim()
     while (s.length > 0 && s.charAt(s.length - 1) === "/") s = s.slice(0, -1)
     return s || defaultInstance
+  }
+
+  // Checks that `url` serves Moodist's sounds by asking for the first file of
+  // the catalogue. Calls done(ok, message) exactly once.
+  function testInstance(url, done) {
+    var base = String(url || "").trim()
+    while (base.length > 0 && base.charAt(base.length - 1) === "/") base = base.slice(0, -1)
+    if (!/^https?:\/\/[^\/\s]+/.test(base)) {
+      done(false, "Enter a URL starting with https:// or http://")
+      return
+    }
+    var probe = categories.length > 0 ? categories[0].sounds[0].src : "/sounds/nature/river.mp3"
+    var finished = false
+    var timeout = Qt.createQmlObject("import QtQuick; Timer { interval: 8000; running: true }", root)
+    var xhr = new XMLHttpRequest()
+    function finish(ok, message) {
+      if (finished) return
+      finished = true
+      timeout.destroy()
+      done(ok, message)
+    }
+    timeout.triggered.connect(function() {
+      xhr.abort()
+      finish(false, "No answer within 8 seconds")
+    })
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState !== XMLHttpRequest.DONE) return
+      var type = String(xhr.getResponseHeader("Content-Type") || "")
+      if (xhr.status === 200 && type.indexOf("audio/") === 0) finish(true, "Moodist sounds found")
+      else if (xhr.status === 0) finish(false, "Could not connect")
+      else if (xhr.status === 200) finish(false, "Answers, but not with Moodist sounds (" + (type || "no type") + ")")
+      else finish(false, "HTTP " + xhr.status + " for " + probe)
+    }
+    xhr.open("HEAD", base + probe)
+    xhr.send()
   }
 
   function soundUrl(id) {
