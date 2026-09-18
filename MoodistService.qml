@@ -94,6 +94,8 @@ Item {
 
   readonly property bool hasMix: activeIds.length > 0
   readonly property bool hasServer: baseUrl !== ""
+  // An error is about the server it came from.
+  onBaseUrlChanged: lastError = ""
   readonly property real defaultSoundVolume: 0.5
   readonly property string statePath: Quickshell.env("HOME") + "/.local/state/omarchy/moodist.json"
   property bool stateLoaded: false
@@ -163,6 +165,7 @@ Item {
     if (!soundsById[id] || isActive(id)) return
     activeModel.append({ soundId: id })
     syncActiveIds()
+    lastError = ""
     // Picking a sound is a request to hear it, as on the Moodist site.
     if (hasServer) playing = true
     save()

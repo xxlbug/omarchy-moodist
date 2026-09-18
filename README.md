@@ -13,6 +13,11 @@ install at the official site, <https://moodist.mvze.net>, would put this
 plugin's traffic on the Moodist author's hosting, and that needs their
 agreement first. Until then, please use your own instance.
 
+<p>
+  <img src="docs/mixer.png" alt="Moodist mixer opened from the bar" width="400">
+  <img src="docs/settings.png" alt="Server and shortcut settings" width="400">
+</p>
+
 ## Install
 
 ```bash

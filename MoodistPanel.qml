@@ -356,7 +356,7 @@ Panel {
             Text {
               id: volumeLabel
               anchors.verticalCenter: parent.verticalCenter
-              width: Style.space(96)
+              width: Style.space(128)
               text: "Volume " + Math.round((root.service ? root.service.masterVolume : 0) * 100) + "%"
               color: root.fg
               font.family: Style.font.family
@@ -399,7 +399,7 @@ Panel {
               Text {
                 id: soundLabel
                 anchors.verticalCenter: parent.verticalCenter
-                width: Style.space(96)
+                width: Style.space(128)
                 elide: Text.ElideRight
                 text: root.labelFor(modelData)
                 color: root.fg
