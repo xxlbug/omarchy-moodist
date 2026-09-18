@@ -14,7 +14,9 @@ Item {
   property var shell: null
 
   readonly property string pluginId: "net.2plastic.moodist"
-  readonly property string defaultInstance: "https://moodist.mvze.net"
+  // No built-in server until the Moodist author has agreed to plugin traffic
+  // on the official instance (moodist.mvze.net); users set their own.
+  readonly property string defaultInstance: ""
   readonly property string defaultShortcut: "CTRL + XF86AudioPlay"
   // Settings as the widget sees them. Widgets get their settings the moment
   // shell.json changes, so these win when set.
@@ -91,6 +93,7 @@ Item {
   property string lastError: ""
 
   readonly property bool hasMix: activeIds.length > 0
+  readonly property bool hasServer: baseUrl !== ""
   readonly property real defaultSoundVolume: 0.5
   readonly property string statePath: Quickshell.env("HOME") + "/.local/state/omarchy/moodist.json"
   property bool stateLoaded: false
@@ -138,7 +141,7 @@ Item {
 
   function soundUrl(id) {
     var sound = soundsById[id]
-    return sound ? baseUrl + sound.src : ""
+    return sound && hasServer ? baseUrl + sound.src : ""
   }
 
   function isActive(id) {
@@ -161,7 +164,7 @@ Item {
     activeModel.append({ soundId: id })
     syncActiveIds()
     // Picking a sound is a request to hear it, as on the Moodist site.
-    playing = true
+    if (hasServer) playing = true
     save()
   }
 
@@ -196,7 +199,7 @@ Item {
   }
 
   function togglePlaying() {
-    if (!hasMix) return false
+    if (!hasMix || !hasServer) return false
     playing = !playing
     return true
   }
@@ -274,7 +277,7 @@ Item {
     target: "moodist"
 
     function toggle(): void { root.togglePlaying() }
-    function play(): void { if (root.hasMix) root.playing = true }
+    function play(): void { if (root.hasMix && root.hasServer) root.playing = true }
     function pause(): void { root.playing = false }
     function add(id: string): void { root.addSound(id) }
     function remove(id: string): void { root.removeSound(id) }

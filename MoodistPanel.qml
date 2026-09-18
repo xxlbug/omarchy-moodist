@@ -20,7 +20,10 @@ Panel {
   readonly property color muted: Qt.rgba(fg.r, fg.g, fg.b, 0.58)
   readonly property var categories: service ? service.categories : []
   readonly property var activeIds: service ? service.activeIds : []
-  readonly property string instanceHost: service ? service.baseUrl.replace(/^https?:\/\//, "") : ""
+  readonly property bool hasServer: service ? service.hasServer : false
+  readonly property string instanceHost: !service ? ""
+    : hasServer ? service.baseUrl.replace(/^https?:\/\//, "")
+    : "No server set"
 
   // Server settings. testState: "idle" | "testing" | "ok" | "failed", always
   // about the URL currently in the field; editing it resets to "idle".
@@ -89,7 +92,11 @@ Panel {
   }
 
   onOpenedChanged: {
-    if (opened) Qt.callLater(function() { keyCatcher.forceActiveFocus() })
+    if (opened) {
+      // Nothing can play without a server, so start where one is entered.
+      if (service && !hasServer) openServer()
+      Qt.callLater(function() { keyCatcher.forceActiveFocus() })
+    }
     // Each opening starts with the server row closed, so a stale test result
     // from last time is never shown.
     else serverOpen = false
@@ -212,7 +219,7 @@ Panel {
 
               Button {
                 text: root.service && root.service.playing ? "Pause" : "Play"
-                enabled: root.service ? root.service.hasMix : false
+                enabled: root.service ? root.service.hasMix && root.hasServer : false
                 opacity: enabled ? 1 : 0.45
                 foreground: root.fg
                 bordered: true
@@ -243,7 +250,7 @@ Panel {
             TextField {
               id: urlField
               width: parent.width
-              placeholderText: "https://moodist.mvze.net"
+              placeholderText: "https://moodist.example.com"
               foreground: root.fg
               onTextEdited: {
                 root.testSerial++
@@ -296,17 +303,6 @@ Panel {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: Style.spacing.sm
-
-                Button {
-                  text: "Default"
-                  tooltipText: "Fill in the official instance"
-                  foreground: root.fg
-                  bordered: true
-                  onClicked: {
-                    urlField.text = root.service ? root.service.defaultInstance : ""
-                    root.runTest()
-                  }
-                }
 
                 Button {
                   text: "Test"

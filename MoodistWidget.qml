@@ -74,6 +74,7 @@ BarWidget {
     slotSize: Style.bar.statusSlot
     dimmed: !root.playing
     tooltipText: !root.service ? "Moodist"
+      : !root.service.hasServer ? "Moodist: set a server"
       : root.playing ? "Moodist: playing " + root.service.activeIds.length + " sound(s)"
       : root.service.hasMix ? "Moodist: paused"
       : "Moodist: pick sounds"
