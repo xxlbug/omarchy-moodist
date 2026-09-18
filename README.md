@@ -12,11 +12,7 @@ at your own self-hosted instance with a single setting.
 
 ```bash
 omarchy plugin add <git-url-of-this-repo> --enable
-omarchy restart shell
 ```
-
-The restart starts the plugin's audio service. Without it the widget shows up
-but stays silent until the next login.
 
 ## Use
 
