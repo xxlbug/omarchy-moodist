@@ -1,6 +1,8 @@
 import QtQuick
 import qs.Commons
 import qs.Ui
+import Quickshell
+import Quickshell.Io
 
 // Mixer popup: play/pause, master volume, the current mix with a slider per
 // sound, and the full catalogue to add sounds from.
@@ -78,6 +80,22 @@ Panel {
     // Each opening starts with the server row closed, so a stale test result
     // from last time is never shown.
     else serverOpen = false
+  }
+
+  // The shell palette has no "success" color and the accent can be any hue
+  // (orange in ristretto), so a passed test uses the theme's own green from
+  // colors.toml, which every stock theme defines.
+  property color okColor: "#8fbf6a"
+
+  FileView {
+    path: Quickshell.env("HOME") + "/.local/state/omarchy/current/theme/colors.toml"
+    watchChanges: true
+    printErrors: false
+    onFileChanged: reload()
+    onLoaded: {
+      var match = text().match(/^green\s*=\s*"(#[0-9a-fA-F]{6})"/m)
+      if (match) root.okColor = match[1]
+    }
   }
 
   function labelFor(id) {
@@ -223,7 +241,7 @@ Panel {
                     : root.testState === "testing" ? String.fromCodePoint(0xF051F)
                     : String.fromCodePoint(0xF02D7)
                   color: root.testState === "failed" ? Color.urgent
-                    : root.testState === "ok" ? Color.accent
+                    : root.testState === "ok" ? root.okColor
                     : root.muted
                   font.family: Style.font.family
                   font.pixelSize: Style.font.subtitle
