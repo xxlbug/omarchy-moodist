@@ -154,11 +154,40 @@ Panel {
                 font.bold: true
               }
 
-              Text {
-                text: root.instanceHost
-                color: root.muted
-                font.family: Style.font.family
-                font.pixelSize: Style.font.caption
+              Row {
+                spacing: Style.spacing.sm
+
+                Text {
+                  anchors.verticalCenter: parent.verticalCenter
+                  text: root.instanceHost
+                  color: root.muted
+                  font.family: Style.font.family
+                  font.pixelSize: Style.font.caption
+                }
+
+                // nf-md-cog, sized to the address it configures
+                Text {
+                  id: serverCog
+                  anchors.verticalCenter: parent.verticalCenter
+                  text: String.fromCodePoint(0xF0493)
+                  color: root.serverOpen || cogMouse.containsMouse ? root.fg : root.muted
+                  font.family: Style.font.family
+                  font.pixelSize: Style.font.caption
+
+                  MouseArea {
+                    id: cogMouse
+                    anchors.fill: parent
+                    anchors.margins: -Style.spacing.xs
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.serverOpen ? root.serverOpen = false : root.openServer()
+                    onContainsMouseChanged: {
+                      if (!root.bar) return
+                      if (containsMouse) root.bar.showTooltip(serverCog, "Change server")
+                      else root.bar.hideTooltip(serverCog)
+                    }
+                  }
+                }
               }
             }
 
@@ -175,15 +204,6 @@ Panel {
                 foreground: root.fg
                 bordered: true
                 onClicked: root.service.togglePlaying()
-              }
-
-              Button {
-                iconText: String.fromCodePoint(0xF0493)
-                tooltipText: "Server"
-                selected: root.serverOpen
-                foreground: root.fg
-                bordered: true
-                onClicked: root.serverOpen ? root.serverOpen = false : root.openServer()
               }
 
               Button {
