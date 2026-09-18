@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "net.2plastic.moodist",
+  "name": "Moodist",
+  "version": "0.1.0",
+  "author": "xxlbug",
+  "license": "MIT",
+  "description": "Ambient sound mixer for the bar. Streams Moodist's sounds from moodist.mvze.net or your own instance.",
+  "kinds": [
+    "bar-widget",
+    "service"
+  ],
+  "entryPoints": {
+    "barWidget": "MoodistWidget.qml",
+    "service": "MoodistService.qml"
+  },
+  "barWidget": {
+    "displayName": "Moodist",
+    "description": "Mix ambient sounds (rain, café, brown noise, ...) from a Moodist instance",
+    "category": "Media",
+    "aliases": ["moodist", "ambient", "noise", "sounds"],
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "instanceUrl": "https://moodist.mvze.net"
+    },
+    "schema": [
+      { "key": "instanceUrl", "type": "string", "label": "Moodist instance URL" }
+    ]
+  }
+}
