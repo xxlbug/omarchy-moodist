@@ -54,9 +54,16 @@ Panel {
   // change up through its settings and hands it to the service.
   function saveServer() {
     if (testState !== "ok" || !service) return
+    var url = service.normalizedBase(testedUrl)
+    // Already the configured instance: nothing to write. The shell reports an
+    // unchanged entry as a failed update, so it must not be asked.
+    if (url === service.baseUrl) {
+      serverOpen = false
+      return
+    }
     var next = ({})
     for (var k in settings) next[k] = settings[k]
-    next.instanceUrl = service.normalizedBase(testedUrl)
+    next.instanceUrl = url
     if (bar && bar.shell && typeof bar.shell.updateEntryInline === "function"
         && bar.shell.updateEntryInline(moduleName, next)) {
       serverOpen = false
@@ -66,7 +73,12 @@ Panel {
     }
   }
 
-  onOpenedChanged: if (opened) Qt.callLater(function() { keyCatcher.forceActiveFocus() })
+  onOpenedChanged: {
+    if (opened) Qt.callLater(function() { keyCatcher.forceActiveFocus() })
+    // Each opening starts with the server row closed, so a stale test result
+    // from last time is never shown.
+    else serverOpen = false
+  }
 
   function labelFor(id) {
     var sound = service ? service.soundsById[id] : null
