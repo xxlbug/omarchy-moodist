@@ -52,6 +52,23 @@ Panel {
     })
   }
 
+  // Merges `changes` into this widget's shell.json entry. The shell reports an
+  // unchanged entry as a failed update, so callers skip no-op writes.
+  function writeSettings(changes) {
+    var next = ({})
+    for (var k in settings) next[k] = settings[k]
+    for (var c in changes) next[c] = changes[c]
+    return !!(bar && bar.shell && typeof bar.shell.updateEntryInline === "function"
+      && bar.shell.updateEntryInline(moduleName, next))
+  }
+
+  readonly property string shortcut: service ? service.shortcut : ""
+
+  function toggleShortcut() {
+    if (!service) return
+    writeSettings({ shortcut: shortcut ? "" : service.defaultShortcut })
+  }
+
   // Writes instanceUrl to this widget's shell.json entry; the widget picks the
   // change up through its settings and hands it to the service.
   function saveServer() {
@@ -63,11 +80,7 @@ Panel {
       serverOpen = false
       return
     }
-    var next = ({})
-    for (var k in settings) next[k] = settings[k]
-    next.instanceUrl = url
-    if (bar && bar.shell && typeof bar.shell.updateEntryInline === "function"
-        && bar.shell.updateEntryInline(moduleName, next)) {
+    if (writeSettings({ instanceUrl: url })) {
       serverOpen = false
     } else {
       testState = "failed"
@@ -183,7 +196,7 @@ Panel {
                     onClicked: root.serverOpen ? root.serverOpen = false : root.openServer()
                     onContainsMouseChanged: {
                       if (!root.bar) return
-                      if (containsMouse) root.bar.showTooltip(serverCog, "Change server")
+                      if (containsMouse) root.bar.showTooltip(serverCog, "Settings")
                       else root.bar.hideTooltip(serverCog)
                     }
                   }
@@ -314,6 +327,29 @@ Panel {
                   onClicked: root.saveServer()
                 }
               }
+            }
+          }
+
+          Column {
+            visible: root.serverOpen
+            width: parent.width
+            spacing: Style.spacing.sm
+
+            PanelSectionHeader {
+              text: "Shortcut"
+              foreground: root.fg
+            }
+
+            Toggle {
+              width: parent.width
+              label: "Play/pause with a key"
+              description: root.shortcut
+                ? root.shortcut.replace("XF86AudioPlay", "Play/Pause key").replace(/CTRL/g, "Ctrl").replace(/SHIFT/g, "Shift").replace(/SUPER/g, "Super").replace(/ALT/g, "Alt")
+                  + " toggles Moodist; the plain key keeps controlling your music"
+                : "Off. Turn on for Ctrl + Play/Pause"
+              checked: root.shortcut !== ""
+              foreground: root.fg
+              onClicked: root.toggleShortcut()
             }
           }
 

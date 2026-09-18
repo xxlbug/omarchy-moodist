@@ -3,6 +3,7 @@ import QtQml
 import QtMultimedia
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 
 // Owns playback. The bar mounts one widget per monitor, so the players live
 // here, in the plugin's single service instance, and every widget is a view
@@ -14,25 +15,65 @@ Item {
 
   readonly property string pluginId: "net.2plastic.moodist"
   readonly property string defaultInstance: "https://moodist.mvze.net"
-  // instanceUrl as the widget sees it. Widgets get their settings the moment
-  // shell.json changes, so this wins when set.
-  property string widgetInstance: ""
-  // instanceUrl from this plugin's own bar entry, for when no widget has
-  // reported yet (startup). shell.barConfig is refreshed one change late
-  // (Omarchy snapshots it before the new config lands), so it only serves as
-  // the fallback.
-  readonly property string configuredInstance: {
+  readonly property string defaultShortcut: "CTRL + XF86AudioPlay"
+  // Settings as the widget sees them. Widgets get their settings the moment
+  // shell.json changes, so these win when set.
+  property var widgetSettings: null
+  // This plugin's own bar entry, for when no widget has reported yet
+  // (startup). shell.barConfig is refreshed one change late (Omarchy
+  // snapshots it before the new config lands), so it is only the fallback.
+  readonly property var configuredEntry: {
     var layout = shell && shell.barConfig ? shell.barConfig.layout : null
-    if (!layout) return ""
+    if (!layout) return null
     var sections = ["left", "center", "right"]
     for (var i = 0; i < sections.length; i++) {
       var entries = layout[sections[i]] || []
       for (var j = 0; j < entries.length; j++)
-        if (entries[j] && entries[j].id === pluginId) return String(entries[j].instanceUrl || "")
+        if (entries[j] && entries[j].id === pluginId) return entries[j]
     }
-    return ""
+    return null
   }
-  readonly property string baseUrl: normalizedBase(widgetInstance || configuredInstance)
+  readonly property var entry: widgetSettings || configuredEntry || ({})
+  readonly property string baseUrl: normalizedBase(entry.instanceUrl)
+
+  // Optional global key for play/pause, e.g. "CTRL + XF86AudioPlay"; empty is
+  // off. Registered at runtime through `hyprctl eval`, the way Omarchy's own
+  // o.bind does it, since plugins have no keybinding API.
+  readonly property string shortcut: validShortcut(entry.shortcut)
+  property string appliedShortcut: ""
+
+  // Only key names and "+" reach the Lua string, never quotes.
+  function validShortcut(value) {
+    var s = String(value || "").trim()
+    return /^[A-Za-z0-9_]+( *\+ *[A-Za-z0-9_]+)*$/.test(s) ? s : ""
+  }
+
+  function hyprEval(lua) {
+    Quickshell.execDetached(["hyprctl", "eval", lua])
+  }
+
+  function applyShortcut() {
+    if (appliedShortcut === shortcut) return
+    if (appliedShortcut) hyprEval('hl.unbind("' + appliedShortcut + '")')
+    if (shortcut) hyprEval('hl.bind("' + shortcut + '", hl.dsp.exec_cmd("omarchy-shell moodist toggle"), '
+      + '{ description = "Moodist play/pause", locked = true })')
+    appliedShortcut = shortcut
+  }
+
+  onShortcutChanged: applyShortcut()
+  Component.onCompleted: applyShortcut()
+  // Removing or reloading the plugin must not leave a key pointing at it.
+  Component.onDestruction: if (appliedShortcut) hyprEval('hl.unbind("' + appliedShortcut + '")')
+
+  // A Hyprland config reload drops every runtime binding.
+  Connections {
+    target: Hyprland
+    function onRawEvent(event) {
+      if (event.name !== "configreloaded") return
+      root.appliedShortcut = ""
+      root.applyShortcut()
+    }
+  }
 
   // Catalogue from sounds.json: [{ id, title, sounds: [{ id, label, src }] }]
   property var categories: []
@@ -243,6 +284,7 @@ Item {
         instance: root.baseUrl,
         playing: root.playing,
         masterVolume: root.masterVolume,
+        shortcut: root.appliedShortcut,
         mix: root.activeIds,
         lastError: root.lastError
       })

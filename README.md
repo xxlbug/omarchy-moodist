@@ -28,7 +28,7 @@ restored after a restart. Playback does not resume on its own.
 
 ## Use your own Moodist instance
 
-In the mixer, click the gear button, enter your instance's URL and press
+In the mixer, click the small cog next to the server address, enter your instance's URL and press
 **Test**. A check mark means the instance serves Moodist's sounds; **Save**
 is enabled only then. **Default** goes back to the official instance.
 
@@ -40,6 +40,26 @@ omarchy bar set net.2plastic.moodist instanceUrl https://moodist.example.com
 
 The instance must serve Moodist's sound files at their usual paths
 (`/sounds/<category>/<name>.mp3`), which any stock Moodist deployment does.
+
+## Play/pause key (optional)
+
+The plain Play/Pause key keeps controlling your music and videos; Moodist is
+background sound and should not take it over. Instead, the plugin can give
+Moodist its own key: open the cog settings and turn on **Play/pause with a
+key**, which binds **Ctrl + Play/Pause**. Omarchy leaves that combination
+free.
+
+For a different key:
+
+```bash
+omarchy bar set net.2plastic.moodist shortcut "SUPER + F12"
+```
+
+Pick a combination that nothing else uses; Hyprland runs every binding for a
+key, so a taken one would do both things. The plugin registers the key at
+runtime with `hyprctl eval`, puts it back after every Hyprland config
+reload, and removes it when the plugin is removed. It shows up as "Moodist
+play/pause" in `hyprctl binds`.
 
 ## Updating
 

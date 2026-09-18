@@ -10,7 +10,6 @@ BarWidget {
   moduleName: "net.2plastic.moodist"
 
   property var service: null
-  readonly property string instanceUrl: String(setting("instanceUrl", ""))
   readonly property bool playing: service ? service.playing : false
   readonly property bool opened: panelLoader.item ? panelLoader.item.opened === true : false
   readonly property bool popoutSwitchClosing: panelLoader.item
@@ -24,7 +23,7 @@ BarWidget {
     var current = bar && bar.shell && typeof bar.shell.serviceFor === "function"
       ? bar.shell.serviceFor(moduleName) : null
     if (current !== service) service = current
-    if (service && service.widgetInstance !== instanceUrl) service.widgetInstance = instanceUrl
+    if (service && service.widgetSettings !== settings) service.widgetSettings = settings
     injectPanel()
   }
 
@@ -47,7 +46,6 @@ BarWidget {
 
   onBarChanged: resolveService()
   onSettingsChanged: resolveService()
-  onInstanceUrlChanged: resolveService()
 
   Timer {
     interval: root.service ? 1000 : 250

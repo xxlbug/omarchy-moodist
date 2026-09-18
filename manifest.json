@@ -22,10 +22,12 @@
     "allowMultiple": false,
     "defaultSection": "right",
     "defaults": {
-      "instanceUrl": "https://moodist.mvze.net"
+      "instanceUrl": "https://moodist.mvze.net",
+      "shortcut": ""
     },
     "schema": [
-      { "key": "instanceUrl", "type": "string", "label": "Moodist instance URL" }
+      { "key": "instanceUrl", "type": "string", "label": "Moodist instance URL" },
+      { "key": "shortcut", "type": "string", "label": "Play/pause key (e.g. CTRL + XF86AudioPlay, empty = off)" }
     ]
   }
 }
