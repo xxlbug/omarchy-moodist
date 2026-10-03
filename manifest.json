@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "author": "xxlbug",
   "license": "MIT",
-  "description": "Ambient sound mixer for the bar. Streams Moodist's sounds from a Moodist instance you choose.",
+  "description": "Ambient sound mixer for the bar. Streams Moodist's sounds from moodist.mvze.net or your own instance.",
   "kinds": [
     "bar-widget",
     "service"
@@ -22,7 +22,7 @@
     "allowMultiple": false,
     "defaultSection": "right",
     "defaults": {
-      "instanceUrl": "",
+      "instanceUrl": "https://moodist.mvze.net",
       "shortcut": ""
     },
     "schema": [

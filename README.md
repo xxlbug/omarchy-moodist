@@ -5,13 +5,11 @@ An Omarchy shell bar widget that mixes ambient sounds from
 and 80 more. It plays in the bar itself, without a browser window, by streaming
 the sound files from a Moodist instance.
 
-It needs a Moodist instance to stream from. Moodist is easy to self-host
-([Docker instructions](https://github.com/remvze/moodist#self-hosting)).
-
-The plugin deliberately ships **without a default server**. Pointing every
-install at the official site, <https://moodist.mvze.net>, would put this
-plugin's traffic on the Moodist author's hosting, and that needs their
-agreement first. Until then, please use your own instance.
+By default it uses the official instance, <https://moodist.mvze.net>, with the
+Moodist author's agreement ([remvze/moodist#111](https://github.com/remvze/moodist/issues/111)).
+Point it at your own self-hosted instance
+([Docker instructions](https://github.com/remvze/moodist#self-hosting)) with a
+single setting.
 
 <p>
   <img src="docs/mixer.png" alt="Moodist mixer opened from the bar" width="400">
@@ -40,8 +38,7 @@ restored after a restart. Playback does not resume on its own.
 
 In the mixer, click the small cog next to the server address, enter your instance's URL and press
 **Test**. A check mark means the instance serves Moodist's sounds; **Save**
-is enabled only then. Until a server is set, opening the mixer starts on this
-row.
+is enabled only then. **Default** goes back to the official instance.
 
 Or from a terminal:
 

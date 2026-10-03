@@ -250,7 +250,7 @@ Panel {
             TextField {
               id: urlField
               width: parent.width
-              placeholderText: "https://moodist.example.com"
+              placeholderText: "https://moodist.mvze.net"
               foreground: root.fg
               onTextEdited: {
                 root.testSerial++
@@ -303,6 +303,17 @@ Panel {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: Style.spacing.sm
+
+                Button {
+                  text: "Default"
+                  tooltipText: "Fill in the official instance"
+                  foreground: root.fg
+                  bordered: true
+                  onClicked: {
+                    urlField.text = root.service ? root.service.defaultInstance : ""
+                    root.runTest()
+                  }
+                }
 
                 Button {
                   text: "Test"

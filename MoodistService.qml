@@ -14,9 +14,9 @@ Item {
   property var shell: null
 
   readonly property string pluginId: "net.2plastic.moodist"
-  // No built-in server until the Moodist author has agreed to plugin traffic
-  // on the official instance (moodist.mvze.net); users set their own.
-  readonly property string defaultInstance: ""
+  // The official instance; its author agreed to it as the default in
+  // https://github.com/remvze/moodist/issues/111
+  readonly property string defaultInstance: "https://moodist.mvze.net"
   readonly property string defaultShortcut: "CTRL + XF86AudioPlay"
   // Settings as the widget sees them. Widgets get their settings the moment
   // shell.json changes, so these win when set.
